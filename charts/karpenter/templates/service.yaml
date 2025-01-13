@@ -5,20 +5,21 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "karpenter.labels" . | nindent 4 }}
-  {{- with .Values.additionalAnnotations }}
+  {{- if or .Values.additionalAnnotations .Values.service.annotations }}
   annotations:
+  {{- with .Values.additionalAnnotations }}
     {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- end }}
 spec:
   type: ClusterIP
   ports:
     - name: http-metrics
-      port: 8080
+      port: {{ .Values.controller.metrics.port }}
       targetPort: http-metrics
-      protocol: TCP
-    - name: https-webhook
-      port: 443
-      targetPort: https-webhook
       protocol: TCP
   selector:
     {{- include "karpenter.selectorLabels" . | nindent 4 }}

@@ -1,37 +1,20 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches:
+      - 'main'
+      - 'release-v*'
+      - 'staging/*'
   pull_request:
   workflow_dispatch:
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
-    strategy:
-        matrix:
-          k8sVersion: ["1.20.x", "1.21.x", "1.22.x", "1.23.x", "1.24.x"]
-    env:
-      K8S_VERSION: ${{ matrix.k8sVersion }}
+    if: github.repository == 'aws/karpenter-provider-aws'
     steps:
-    - uses: actions/checkout@v3
-    - run: sed -En 's/^go[[:space:]]+([[:digit:].]+)$/GO_VERSION=\1/p' go.mod >> $GITHUB_ENV
-    - uses: actions/setup-go@v3
-      with:
-        go-version: ${{ env.GO_VERSION }}
-        check-latest: true
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-          ~/go/bin/
-          ~/.kubebuilder/bin
-        key: ${{ runner.os }}-go-cache-${{ hashFiles('**/go.sum') }}
-    - name: CI - Verifications and Tests
-      run: |
-        make ci
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - uses: shogo82148/actions-goveralls@v1
-      with:
-        path-to-profile: coverage.out
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - uses: ./.github/actions/install-deps
+    - name: Enable the actionlint matcher
+      run: echo "::add-matcher::.github/actionlint-matcher.json"
+    - run: make ci-non-test
+      shell: bash

@@ -15,15 +15,59 @@ limitations under the License.
 package main
 
 import (
-	"context"
+	"github.com/aws/karpenter-provider-aws/pkg/cloudprovider"
+	"github.com/aws/karpenter-provider-aws/pkg/controllers"
+	"github.com/aws/karpenter-provider-aws/pkg/operator"
 
-	"github.com/aws/karpenter/pkg/cloudprovider"
-	"github.com/aws/karpenter/pkg/cloudprovider/aws"
-	"github.com/aws/karpenter/pkg/controllers"
+	"sigs.k8s.io/karpenter/pkg/cloudprovider/metrics"
+	corecontrollers "sigs.k8s.io/karpenter/pkg/controllers"
+	"sigs.k8s.io/karpenter/pkg/controllers/state"
+	coreoperator "sigs.k8s.io/karpenter/pkg/operator"
 )
 
 func main() {
-	controllers.Initialize(func(ctx context.Context, options cloudprovider.Options) cloudprovider.CloudProvider {
-		return aws.NewCloudProvider(ctx, options)
-	})
+	ctx, op := operator.NewOperator(coreoperator.NewOperator())
+
+	awsCloudProvider := cloudprovider.New(
+		op.InstanceTypesProvider,
+		op.InstanceProvider,
+		op.EventRecorder,
+		op.GetClient(),
+		op.AMIProvider,
+		op.SecurityGroupProvider,
+	)
+	cloudProvider := metrics.Decorate(awsCloudProvider)
+	clusterState := state.NewCluster(op.Clock, op.GetClient(), cloudProvider)
+
+	op.
+		WithControllers(ctx, corecontrollers.NewControllers(
+			ctx,
+			op.Manager,
+			op.Clock,
+			op.GetClient(),
+			op.EventRecorder,
+			cloudProvider,
+			clusterState,
+		)...).
+		WithControllers(ctx, controllers.NewControllers(
+			ctx,
+			op.Manager,
+			op.Config,
+			op.Clock,
+			op.GetClient(),
+			op.EventRecorder,
+			op.UnavailableOfferingsCache,
+			op.SSMCache,
+			cloudProvider,
+			op.SubnetProvider,
+			op.SecurityGroupProvider,
+			op.InstanceProfileProvider,
+			op.InstanceProvider,
+			op.PricingProvider,
+			op.AMIProvider,
+			op.LaunchTemplateProvider,
+			op.VersionProvider,
+			op.InstanceTypesProvider,
+		)...).
+		Start(ctx)
 }

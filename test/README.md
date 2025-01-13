@@ -1,22 +1,31 @@
-# Testing Directory
+# E2E Testing
 
-All files and configurations used for testing as detailed in the [Testing Guide](https://karpenter.sh/preview/testing-guide/) live here. Configurations and setup files here will be used in the future to test PRs.
+Karpenter leverages Github Actions to run our E2E test suites. These suites are triggered by:
+1. Periodic schedule runs every 8 hours
+2. New commits to the `main` branch
+3. `/karpenter snapshot` review comments by maintainers on Pull Requests
 
-## File Directory
-- `/infrastructure`: Testing infrastructure
-- `/suites`: [Tekton](https://tekton.dev/) CRDs defining test suites
+![GithubActions Architecture](./assets/gha_architecture.png)
 
-## Testing Infrastructure Design Choices
-Testing infrastructure will be divided up into three layers: Management Cluster, Test Orchestration, and Clusters Under Test. The Management Cluster will be a Kubernetes cluster with configured add-ons to run a Test Orchestration tool that will create Clusters Under Test where Karpenter will be tested.
-- `Management Cluster`: An EKS Cluster with configured Add-ons and Tekton
-- `Test Orchestration`: Tekton to create Clusters Under Test and run Test Suites.
-- `Clusters Under Test`: Rapid iteration [KIT](https://github.com/awslabs/kubernetes-iteration-toolkit) Guest Clusters and EKS Clusters where test suites will run.
+## Directories
+- `./.github/workflows`: Workflow files run within this repository. Relevant files for E2E testing are prefixed with `e2e-`
+- `./.github/actions/e2e`: Composite actions utilized by the E2E workflows
+- `./test/cloudformation`: Testing IAM Roles, Managed Prometheus Workspace, Managed Grafana Workspace
+- `./test/suites`: Directories defining test suites
+- `./test/pkg`: Common utilities and expectations
+- `./test/hack`: Testing scripts
 
-*Note: A more formal design discussing testing infrastructure will come soon.*
+## Enabling Github Action Runs in Your AWS Account
 
-## Developing
-Use the Tekton UI to manage and monitor resources and test-runs:
-```
-kubectl port-forward service/tekton-dashboard -n tekton-pipelines 9097&
-open http://localhost:9097
-```
+1. Deploy the [Cloudformation stacks](https://github.com/aws/karpenter-provider-aws/tree/main/test/cloudformation/README.md) into your account to enable Managed Prometheus, Managed Grafana, and the Github Actions runner policies.
+2. Set the following [Github Actions environment variables](https://docs.github.com/en/actions/learn-github-actions/variables#defining-configuration-variables-for-multiple-workflows) in your repository fork under `Settings/Secrets and Variables/Actions`:
+   ```yaml
+   AWS_REGION: <region>
+   ACCOUNT_ID: <account-id>
+   ROLE_NAME: <github-actions-role-name>
+   PROMETHEUS_REGION: <managed-prometheus-hosted-region>
+   TIMESTREAM_REGION: <timestream-hosted-region>
+   WORKSPACE_ID: <managed-prometheus-workspace-id>
+   ```
+3. Trigger a `workflow_dispatch` event against the branch with your workflow changes to run the tests in GHA.
+4. [Optional] Update the `SLACK_WEBHOOK_URL` secret to reference a custom slack webhook url for publishing build notification messages into your build notification slack channel.

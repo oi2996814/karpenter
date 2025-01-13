@@ -1,20 +1,13 @@
 # See https://github.com/golangci/golangci-lint/blob/master/.golangci.example.yml
 run:
   tests: true
-
   timeout: 5m
-
-  skip-dirs:
-    - tools
-    - website
-    - hack
-    - charts
-    - designs
-
 linters:
   enable:
     - asciicheck
+    - bidichk
     - errorlint
+    - copyloopvar
     - gosec
     - revive
     - stylecheck
@@ -26,19 +19,29 @@ linters:
     - goimports
     - goheader
     - misspell
+    - nilerr
   disable:
     - prealloc
-
 linters-settings:
   gocyclo:
     min-complexity: 11
   govet:
-    check-shadowing: true
+    enable-all: true
+    disable:
+      - fieldalignment
+  revive:
+    rules:
+    - name: dot-imports
+      disabled: true
+  stylecheck:
+    dot-import-whitelist:
+      - "github.com/onsi/ginkgo/v2"
+      - "github.com/onsi/gomega"
   misspell:
     locale: US
     ignore-words: []
   goimports:
-    local-prefixes: github.com/aws/karpenter
+    local-prefixes: github.com/aws/karpenter-provider-aws
   goheader:
     template: |-
       Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +58,12 @@ linters-settings:
 issues:
   fix: true
   exclude: ['declaration of "(err|ctx)" shadows declaration at']
+  exclude-dirs:
+    - tools
+    - website
+    - hack
+    - charts
+    - designs
   exclude-rules:
   - linters:
     - goheader

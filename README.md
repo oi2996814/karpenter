@@ -1,10 +1,10 @@
-![Build Status](https://img.shields.io/github/workflow/status/aws/karpenter/CI/main)
-![GitHub stars](https://img.shields.io/github/stars/aws/karpenter)
-![GitHub forks](https://img.shields.io/github/forks/aws/karpenter)
-[![GitHub License](https://img.shields.io/badge/License-Apache%202.0-ff69b4.svg)](https://github.com/aws/karpenter/blob/main/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/aws/karpenter)](https://goreportcard.com/report/github.com/aws/karpenter)
-[![Coverage Status](https://coveralls.io/repos/github/aws/karpenter/badge.svg?branch=main)](https://coveralls.io/github/aws/karpenter?branch=main)
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/aws/karpenter/issues)
+[![CI](https://github.com/aws/karpenter-provider-aws/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/aws/karpenter/actions/workflows/ci.yaml)
+![GitHub stars](https://img.shields.io/github/stars/aws/karpenter-provider-aws)
+![GitHub forks](https://img.shields.io/github/forks/aws/karpenter-provider-aws)
+[![GitHub License](https://img.shields.io/badge/License-Apache%202.0-ff69b4.svg)](https://github.com/aws/karpenter-provider-aws/blob/main/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/aws/karpenter-provider-aws)](https://goreportcard.com/report/github.com/aws/karpenter)
+[![Coverage Status](https://coveralls.io/repos/github/aws/karpenter-provider-aws/badge.svg?branch=main)](https://coveralls.io/github/aws/karpenter?branch=main)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/aws/karpenter-provider-aws/issues)
 
 ![](website/static/banner.png)
 
@@ -16,11 +16,13 @@ Karpenter improves the efficiency and cost of running workloads on Kubernetes cl
 * **Provisioning** nodes that meet the requirements of the pods
 * **Removing** the nodes when the nodes are no longer needed
 
-Come discuss Karpenter in the [#karpenter](https://kubernetes.slack.com/archives/C02SFFZSA2K) channel in the [Kubernetes slack](https://slack.k8s.io/)!
+Come discuss Karpenter in the [#karpenter](https://kubernetes.slack.com/archives/C02SFFZSA2K) channel, in the [Kubernetes slack](https://slack.k8s.io/) or join the [Karpenter working group](https://karpenter.sh/docs/contributing/working-group/) bi-weekly calls. If you want to contribute to the Karpenter project, please refer to the Karpenter docs.
 
-Check out the [Docs](https://karpenter.sh/) to learn more.
+Check out the [Docs](https://karpenter.sh/docs/) to learn more.
 
 ## Talks
+- 03/19/2024 [Harnessing Karpenter: Transforming Kubernetes Clusters with Argo Workflows](https://www.youtube.com/watch?v=rq57liGu0H4)
+- 12/04/2023 [AWS re:Invent 2023 - Harness the power of Karpenter to scale, optimize & upgrade Kubernetes](https://www.youtube.com/watch?v=lkg_9ETHeks)
 - 09/08/2022 [Workload Consolidation with Karpenter](https://youtu.be/BnksdJ3oOEs)
 - 05/19/2022 [Scaling K8s Nodes Without Breaking the Bank or Your Sanity](https://www.youtube.com/watch?v=UBb8wbfSc34)
 - 03/25/2022 [Karpenter @ AWS Community Day 2022](https://youtu.be/sxDtmzbNHwE?t=3931)

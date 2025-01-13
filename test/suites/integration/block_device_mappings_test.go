@@ -15,47 +15,35 @@ limitations under the License.
 package integration_test
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/samber/lo"
+	"sigs.k8s.io/karpenter/pkg/test"
+	"sigs.k8s.io/karpenter/pkg/utils/resources"
+
+	v1 "github.com/aws/karpenter-provider-aws/pkg/apis/v1"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/aws/karpenter/pkg/apis/awsnodetemplate/v1alpha1"
-	"github.com/aws/karpenter/pkg/apis/provisioning/v1alpha5"
-	awsv1alpha1 "github.com/aws/karpenter/pkg/cloudprovider/aws/apis/v1alpha1"
-	"github.com/aws/karpenter/pkg/test"
-	"github.com/aws/karpenter/pkg/utils/resources"
 )
 
 var _ = Describe("BlockDeviceMappings", func() {
-	BeforeEach(func() {
-
-	})
-
 	It("should use specified block device mappings", func() {
-		provider := test.AWSNodeTemplate(v1alpha1.AWSNodeTemplateSpec{
-			AWS: awsv1alpha1.AWS{
-				SecurityGroupSelector: map[string]string{"karpenter.sh/discovery": env.ClusterName},
-				SubnetSelector:        map[string]string{"karpenter.sh/discovery": env.ClusterName},
-				LaunchTemplate: awsv1alpha1.LaunchTemplate{
-					BlockDeviceMappings: []*awsv1alpha1.BlockDeviceMapping{
-						{
-							DeviceName: aws.String("/dev/xvda"),
-							EBS: &awsv1alpha1.BlockDevice{
-								VolumeSize:          resources.Quantity("10G"),
-								VolumeType:          aws.String("io2"),
-								IOPS:                aws.Int64(1000),
-								Encrypted:           aws.Bool(true),
-								DeleteOnTermination: aws.Bool(true),
-							},
-						},
-					},
+		nodeClass.Spec.BlockDeviceMappings = []*v1.BlockDeviceMapping{
+			{
+				DeviceName: aws.String("/dev/xvda"),
+				EBS: &v1.BlockDevice{
+					VolumeSize:          resources.Quantity("20Gi"),
+					VolumeType:          aws.String("io2"),
+					IOPS:                aws.Int64(1000),
+					Encrypted:           aws.Bool(true),
+					DeleteOnTermination: aws.Bool(true),
 				},
 			},
-		})
-		provisioner := test.Provisioner(test.ProvisionerOptions{ProviderRef: &v1alpha5.ProviderRef{Name: provider.Name}})
+		}
 		pod := test.Pod()
 
-		env.ExpectCreated(pod, provider, provisioner)
+		env.ExpectCreated(pod, nodeClass, nodePool)
 		env.EventuallyExpectHealthy(pod)
 		env.ExpectCreatedNodeCount("==", 1)
 		instance := env.GetInstance(pod.Spec.NodeName)
@@ -63,11 +51,10 @@ var _ = Describe("BlockDeviceMappings", func() {
 		Expect(instance.BlockDeviceMappings[0]).ToNot(BeNil())
 		Expect(instance.BlockDeviceMappings[0]).To(HaveField("DeviceName", HaveValue(Equal("/dev/xvda"))))
 		Expect(instance.BlockDeviceMappings[0].Ebs).To(HaveField("DeleteOnTermination", HaveValue(BeTrue())))
-		volume := env.GetVolume(instance.BlockDeviceMappings[0].Ebs.VolumeId)
+		volume := env.GetVolume(lo.FromPtr(instance.BlockDeviceMappings[0].Ebs.VolumeId))
 		Expect(volume).To(HaveField("Encrypted", HaveValue(BeTrue())))
-		Expect(volume).To(HaveField("Size", HaveValue(Equal(int64(10)))))
-		Expect(volume).To(HaveField("Iops", HaveValue(Equal(int64(1000)))))
-		Expect(volume).To(HaveField("VolumeType", HaveValue(Equal("io2"))))
+		Expect(volume).To(HaveField("Size", HaveValue(Equal(int32(20)))))
+		Expect(volume).To(HaveField("Iops", HaveValue(Equal(int32(1000)))))
+		Expect(volume).To(HaveField("VolumeType", HaveValue(Equal(ec2types.VolumeType("io2")))))
 	})
-
 })
